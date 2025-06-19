@@ -1,19 +1,17 @@
+#index.py
 from fastapi import FastAPI
 from fastapi.responses import PlainTextResponse
-import requests
-from bs4 import BeautifulSoup
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.requests import Request
+from starlette.responses import Response
+from starlette.routing import Mount
+from mangum import Mangum  # needed for AWS-style handlers
 
 app = FastAPI()
 
-@app.get("/api/outline", response_class=PlainTextResponse)
+@app.get("/api/outline")
 def get_outline(country: str):
-    url = f"https://en.wikipedia.org/wiki/{country}"
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, "html.parser")
+    return {"message": f"Outline for {country}"}
 
-    result = "## Contents\n\n"
-    for tag in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"]):
-        level = int(tag.name[1])
-        result += f"{'#' * level} {tag.get_text().strip()}\n\n"
+handler = Mangum(app)
 
-    return result
